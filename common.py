@@ -61,3 +61,16 @@ def image_u8_decimate(img: np.ndarray, ffactor: float):
 #     }
 #     return decim;
 # }
+
+# again use coprime dimensions for debugging safety
+def max_pool(arr, block_size: int, _max=True):
+    
+    h, w = arr.shape  # pretend we only have this
+    hs, r0 = divmod(h, block_size)
+    ws, r1 = divmod(w, block_size)
+    pooled = arr[:h-r0, :w-r1].reshape(hs, block_size,
+                        ws, block_size)
+    if _max:
+        return pooled.max((1, 3))
+    else:
+        return pooled.min((1, 3))
