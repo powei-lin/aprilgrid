@@ -1,16 +1,24 @@
 import numpy as np
 # from common import image_u8_decimate, max_pool
 import cv2
-# from apriltag import Detector
+from apriltag import Detector
 
-arr = np.random.randint(1, 10, (7, 4)).astype(np.uint8)
-print(arr)
-d = cv2.dilate(arr, np.ones((3, 3)))
-print(d)
+# x = np.array([[1, 3], [2, 4]])
+# print(x)
+# print(np.repeat(np.repeat(x, 2, axis=1), 2, axis=0))
+# exit()
+
+
+# arr = np.random.randint(1, 10, (7, 4)).astype(np.uint8)
+# print(arr)
+# print(np.where(arr > 3, arr, 0))
+# exit()
+# d = cv2.dilate(arr, np.ones((3, 3)))
+# print(d)
 # max_pool(arr, 2)
-# d = Detector()
-# img = cv2.imread("001.jpg", cv2.IMREAD_GRAYSCALE)
-# im_max = d.threshold(img)
+d = Detector()
+img = cv2.imread("001.jpg", cv2.IMREAD_GRAYSCALE)
+im_max = d.threshold(img)
 # print(img.shape)
 # print(im_max.shape)
 # cv2.imshow("im", img)

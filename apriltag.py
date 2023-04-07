@@ -9,16 +9,11 @@ class Detector:
     nthreads = 1
     quad_decimate = 2.0
     quad_sigma = 0.0
-    qtp: ApriltagQuadThreshParams
+    refine_edges: bool = True
+    decode_sharpening: float = 0.25
+    qtp: ApriltagQuadThreshParams = ApriltagQuadThreshParams()
 
-    td->tag_families = zarray_create(sizeof(apriltag_family_t*));
-
-    pthread_mutex_init(&td->mutex, NULL);
-
-    td->tp = timeprofile_create();
-
-    td->refine_edges = true;
-    td->decode_sharpening = 0.25;
+    # td->tag_families = zarray_create(sizeof(apriltag_family_t*));
 
     def detect(self, img: np.ndarray):       
         # step 1 resize
@@ -66,6 +61,14 @@ class Detector:
         # detect
         pass
 
+    def connected_components(self, threshim: np.ndarray, int w, int h, int ts) {
+        unionfind_t *uf = unionfind_create(w * h);
+        do_unionfind_first_line(uf, threshim, h, w, ts);
+        for (int y = 1; y < h; y++) {
+            do_unionfind_line2(uf, threshim, h, w, ts, y);
+        }
+        return uf
+
     def apriltag_quad_thresh(self, im: np.ndarray):
         # step 1. threshold the image, creating the edge image.
         h, w = im.shape[0], im.shape[1]
@@ -73,8 +76,8 @@ class Detector:
         threshim = self.threshold(self, im)
         # int ts = threshim->stride;
 
-        # # step 2. find connected components.
-        # unionfind_t* uf = connected_components(td, threshim, w, h, ts);
+        # step 2. find connected components.
+        unionfind_t* uf = connected_components(td, threshim, w, h, ts);
 
         # zarray_t* clusters = gradient_clusters(td, threshim, w, h, ts, uf);
 
@@ -141,52 +144,23 @@ class Detector:
             kernel = np.ones((3, 3), dtype=np.uint8)
             im_max = cv2.dilate(im_max, kernel)
             im_min = cv2.erode(im_min, kernel)
+        im_min = np.repeat(np.repeat(im_min, tilesz, axis=1), tilesz, axis=0)
+        im_max = np.repeat(np.repeat(im_max, tilesz, axis=1), tilesz, axis=0)
+        
+        im_diff = im_max - im_min
+        threshim = np.where( im_diff < self.qtp.min_white_black_diff, np.uint8(127), np.where( im > (im_min + im_diff // 2), np.uint8(255), np.uint8(0)))
+        # debug
+        # print(threshim.dtype)
+        # print(im_diff.shape)
+        # print(im.shape)
+        # cv2.imshow("tt", threshim)
+        # cv2.waitKey(0)
 
-        for ty in range(th):
-            for tx in range(tw):
-                int min = im_min[ty*tw + tx];
-                int max = im_max[ty*tw + tx];
-
-                # low contrast region? (no edges)
-                if (max - min < td->qtp.min_white_black_diff) {
-                    for (int dy = 0; dy < tilesz; dy++) {
-                        int y = ty*tilesz + dy;
-
-                        for (int dx = 0; dx < tilesz; dx++) {
-                            int x = tx*tilesz + dx;
-
-                            threshim->buf[y*s+x] = 127;
-                        }
-                    }
-                    continue;
-                }
-
-                # otherwise, actually threshold this tile.
-                # argument for biasing towards dark; specular highlights
-                # can be substantially brighter than white tag parts
-                uint8_t thresh = min + (max - min) / 2;
-
-                for (int dy = 0; dy < tilesz; dy++) {
-                    int y = ty*tilesz + dy;
-
-                    for (int dx = 0; dx < tilesz; dx++) {
-                        int x = tx*tilesz + dx;
-
-                        uint8_t v = im->buf[y*s+x];
-                        if (v > thresh)
-                            threshim->buf[y*s+x] = 255;
-                        else
-                            threshim->buf[y*s+x] = 0;
-                    }
-                }
-            }
-        }
-
-        # // we skipped over the non-full-sized tiles above. Fix those now.
-        # if (1) {
+        # # we skipped over the non-full-sized tiles above. Fix those now.
+        # if True:
         #     for (int y = 0; y < h; y++) {
 
-        #         // what is the first x coordinate we need to process in this row?
+        #         # what is the first x coordinate we need to process in this row?
 
         #         int x0;
 
@@ -219,4 +193,4 @@ class Detector:
         #     }
         # }
 
-        return threshim;
+        return threshim

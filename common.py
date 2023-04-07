@@ -1,4 +1,5 @@
 import numpy as np
+from unionfind import Unionfind, unionfind_connect
 
 def image_u8_decimate(img: np.ndarray, ffactor: float):
     height, width = img.shape
@@ -74,3 +75,60 @@ def max_pool(arr, block_size: int, _max=True):
         return pooled.max((1, 3))
     else:
         return pooled.min((1, 3))
+
+#define DO_UNIONFIND2(dx, dy) 
+
+def do_unionfind_first_line(uf: Unionfind, im: np.ndarray, h: int, w: int, s: int):
+    y = 0
+    v = 0
+
+    for x in range(1, w-1):
+        v = im[y, x]
+
+        if (v == 127):
+            continue
+
+        dx, dy = -1, 0
+        if (im[(y + dy), x + dx] == v):
+            unionfind_connect(uf, y*w + x, (y + dy)*w + x + dx)
+
+def do_unionfind_line2(uf: Unionfind, im: np.ndarray, h: int, w: int, s: int, y: int):
+    assert(y > 0)
+
+    v_m1_m1 = 0
+    v_0_m1 = im[(y - 1), 0]
+    v_1_m1 = im[(y - 1), 1]
+    v_m1_0 = 0
+    v = im[y, 0]
+
+    for x in range(1, w - 1):
+        v_m1_m1 = v_0_m1
+        v_0_m1 = v_1_m1
+        v_1_m1 = im[(y - 1), x + 1]
+        v_m1_0 = v
+        v = im[y, x]
+
+        if (v == 127):
+            continue
+
+        # (dx, dy) pairs for 8 connectivity:
+        # (-1, -1)    (0, -1)    (1, -1)
+        # (-1, 0)    (REFERENCE)
+        dx, dy = -1, 0
+        if (im[(y + dy), x + dx] == v):
+            unionfind_connect(uf, y*w + x, (y + dy)*w + x + dx)
+
+        if (x == 1 or not ((v_m1_0 == v_m1_m1) and (v_m1_m1 == v_0_m1))):
+            dx, dy = 0, -1
+            if (im[(y + dy), x + dx] == v):
+                unionfind_connect(uf, y*w + x, (y + dy)*w + x + dx)
+
+        if (v == 255):
+            if (x == 1 or not (v_m1_0 == v_m1_m1 or v_0_m1 == v_m1_m1)):
+                dx, dy = -1, -1
+                if (im[(y + dy), x + dx] == v):
+                    unionfind_connect(uf, y*w + x, (y + dy)*w + x + dx)
+            if (not (v_0_m1 == v_1_m1)):
+                dx, dy = 1, -1
+                if (im[(y + dy), x + dx] == v):
+                    unionfind_connect(uf, y*w + x, (y + dy)*w + x + dx)

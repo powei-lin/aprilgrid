@@ -14,7 +14,7 @@ class ApriltagQuadThreshParams:
     # Reject quads where pairs of edges have angles that are close to
     # straight or close to 180 degrees. Zero means that no quads are
     # rejected. (In radians).
-    critical_rad: float
+    # critical_rad: float
     cos_critical_rad: float = cos(10 * pi / 180)
 
     # When fitting lines to the contours, what is the maximum mean
