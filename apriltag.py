@@ -11,6 +11,15 @@ class Detector:
     quad_sigma = 0.0
     qtp: ApriltagQuadThreshParams
 
+    td->tag_families = zarray_create(sizeof(apriltag_family_t*));
+
+    pthread_mutex_init(&td->mutex, NULL);
+
+    td->tp = timeprofile_create();
+
+    td->refine_edges = true;
+    td->decode_sharpening = 0.25;
+
     def detect(self, img: np.ndarray):       
         # step 1 resize
         if (self.quad_sigma != 0.0):
