@@ -11,7 +11,7 @@ def image_u8_decimate(img: np.ndarray, ffactor: float):
         decim = np.zeros((sheight, swidth), np.uint8)
 
         y = 0
-        sy = 0;
+        sy = 0
         while (sy < sheight):
             x = 0
             sx = 0
@@ -76,9 +76,7 @@ def max_pool(arr, block_size: int, _max=True):
     else:
         return pooled.min((1, 3))
 
-#define DO_UNIONFIND2(dx, dy) 
-
-def do_unionfind_first_line(uf: Unionfind, im: np.ndarray, h: int, w: int, s: int):
+def do_unionfind_first_line(uf: Unionfind, im: np.ndarray, w: int, s: int):
     y = 0
     v = 0
 
@@ -92,7 +90,7 @@ def do_unionfind_first_line(uf: Unionfind, im: np.ndarray, h: int, w: int, s: in
         if (im[(y + dy), x + dx] == v):
             unionfind_connect(uf, y*w + x, (y + dy)*w + x + dx)
 
-def do_unionfind_line2(uf: Unionfind, im: np.ndarray, h: int, w: int, s: int, y: int):
+def do_unionfind_line2(uf: Unionfind, im: np.ndarray, w: int, y: int):
     assert(y > 0)
 
     v_m1_m1 = 0
