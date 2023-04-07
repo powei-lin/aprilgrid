@@ -76,7 +76,7 @@ def max_pool(arr, block_size: int, _max=True):
     else:
         return pooled.min((1, 3))
 
-def do_unionfind_first_line(uf: Unionfind, im: np.ndarray, w: int, s: int):
+def do_unionfind_first_line(uf: Unionfind, im: np.ndarray, w: int):
     y = 0
     v = 0
 

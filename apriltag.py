@@ -2,7 +2,8 @@ from dataclasses import dataclass
 import numpy as np
 import cv2
 from qtp import ApriltagQuadThreshParams
-from common import max_pool
+from unionfind import Unionfind, unionfind_get_representative, unionfind_get_set_size
+from common import max_pool, do_unionfind_first_line, do_unionfind_line2
 
 @dataclass
 class Detector:
@@ -59,27 +60,60 @@ class Detector:
                     #     }
                     # }
         # detect
+        quad_im = img
+        quads = self.apriltag_quad_thresh(quad_im)
         pass
 
-    def connected_components(self, threshim: np.ndarray, int w, int h, int ts) {
-        unionfind_t *uf = unionfind_create(w * h);
-        do_unionfind_first_line(uf, threshim, h, w, ts);
-        for (int y = 1; y < h; y++) {
-            do_unionfind_line2(uf, threshim, h, w, ts, y);
-        }
+    def connected_components(self, threshim: np.ndarray, w: int, h: int):
+        uf = Unionfind(w * h)
+        
+        do_unionfind_first_line(uf, threshim, w)
+
+        for y in range(1, h):
+            do_unionfind_line2(uf, threshim, w, y)
+
         return uf
 
     def apriltag_quad_thresh(self, im: np.ndarray):
         # step 1. threshold the image, creating the edge image.
         h, w = im.shape[0], im.shape[1]
 
-        threshim = self.threshold(self, im)
-        # int ts = threshim->stride;
+        threshim = self.threshold(im)
 
         # step 2. find connected components.
-        unionfind_t* uf = connected_components(td, threshim, w, h, ts);
+        print("aaa")
+        uf = self.connected_components(threshim, w, h)
+        
+        # make segmentation image.
+        if (True):
+            d = np.zeros((h, w, 3), np.uint8)
+            colors = np.zeros((h*w, 3), np.uint8)
 
-        # zarray_t* clusters = gradient_clusters(td, threshim, w, h, ts, uf);
+            for y in range(h):
+                for x in range(w):
+                    v = unionfind_get_representative(uf, y*w+x)
+
+                    if (unionfind_get_set_size(uf, v) < self.qtp.min_cluster_pixels):
+                        continue
+
+                    color = colors[v]
+                    r = color[0]
+                    g = color[1]
+                    b = color[2]
+
+                    if (r == 0 and g == 0 and b == 0):
+                        r = colors[v][0] = np.random.randint(0, 150)
+                        g = colors[v][1] = np.random.randint(0, 150)
+                        b = colors[v][2] = np.random.randint(0, 150)
+
+                    d[y, x, 0] = r
+                    d[y, x, 1] = r
+                    d[y, x, 2] = r
+
+            cv2.imwrite("debug.png", d)
+        # print(uf.data)
+
+        # clusters = gradient_clusters(td, threshim, w, h, ts, uf);
 
         # # step 3. process each connected component.
 
@@ -148,7 +182,8 @@ class Detector:
         im_max = np.repeat(np.repeat(im_max, tilesz, axis=1), tilesz, axis=0)
         
         im_diff = im_max - im_min
-        threshim = np.where( im_diff < self.qtp.min_white_black_diff, np.uint8(127), np.where( im > (im_min + im_diff // 2), np.uint8(255), np.uint8(0)))
+        threshim = np.where( im_diff < self.qtp.min_white_black_diff, np.uint8(127),
+                            np.where( im > (im_min + im_diff // 2), np.uint8(255), np.uint8(0)))
         # debug
         # print(threshim.dtype)
         # print(im_diff.shape)
