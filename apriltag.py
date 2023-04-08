@@ -72,15 +72,17 @@ class Detector:
         zeroZone = (-1, -1)
         criteria = (cv2.TERM_CRITERIA_EPS + cv2.TermCriteria_COUNT, 40, 0.001)
         quads = [cv2.cornerSubPix(img, quad.astype(np.float32), winSize, zeroZone, criteria) for quad in quads]
-        img_color = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-        for q in quads:
-            for c in q:
-                cv2.circle(img_color, np.round(c[0]).astype(np.int32), 5, (0,0,255))
-        cv2.imshow("color", img_color)
-        cv2.waitKey(0)
+        tf = Tag36h11class()
+        tf.decodeQuad(quads, img)
+        # img_color = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+        # for q in quads:
+        #     for c in q:
+        #         cv2.circle(img_color, np.round(c[0]).astype(np.int32), 5, (0,0,255))
+        # cv2.imshow("color", img_color)
+        # cv2.waitKey(0)
 
         # decode
-        pass
+        
 
     @timeit
     def connected_components(self, threshim: np.ndarray, w: int, h: int):
