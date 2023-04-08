@@ -2,6 +2,7 @@ from dataclasses import dataclass
 import numpy as np
 import cv2
 from time import perf_counter
+from tagFamilies import Tag36h11class
 from qtp import ApriltagQuadThreshParams
 from unionfind import Unionfind, unionfind_get_representative, unionfind_get_set_size
 from common import max_pool, do_unionfind_first_line, do_unionfind_line2, timeit
@@ -64,6 +65,21 @@ class Detector:
         # detect
         quad_im = img
         quads = self.apriltag_quad_thresh(quad_im)
+        print(len(quads[0]))
+        # Step 2. Decode tags from each quad.
+        # refine_edge
+        winSize = (5, 5)
+        zeroZone = (-1, -1)
+        criteria = (cv2.TERM_CRITERIA_EPS + cv2.TermCriteria_COUNT, 40, 0.001)
+        quads = [cv2.cornerSubPix(img, quad.astype(np.float32), winSize, zeroZone, criteria) for quad in quads]
+        img_color = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+        for q in quads:
+            for c in q:
+                cv2.circle(img_color, np.round(c[0]).astype(np.int32), 5, (0,0,255))
+        cv2.imshow("color", img_color)
+        cv2.waitKey(0)
+
+        # decode
         pass
 
     @timeit
@@ -84,12 +100,6 @@ class Detector:
         threshim = self.threshold(im)
         cv2.imshow("threshim", threshim)
         # find all contours
-        def ratio(c, max_n, min_n):
-            x,y,w,h = cv2.boundingRect(c)
-            if( 1.0*w/h < max_n and 1.0*w/h > min_n):
-                return True
-            else:
-                return False
         (cnts, _) = cv2.findContours(threshim, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
         # cnts = [c for c in cnts if  6000 > cv2.contourArea(c) > self.qtp.min_cluster_pixels  and ratio(c, 1.2, 0.8)]
         output = np.zeros((h, w, 3), dtype=np.uint8)
@@ -108,7 +118,9 @@ class Detector:
                             areaqued = cv2.contourArea(quad)
                             areahull = cv2.contourArea(hull)
                             if areaqued / areahull > 0.8 and areahull >= areaqued:
+                                # Calculate the refined corner locations
                                 quads.append(quad)
+        return quads
         for i, q in enumerate(quads):
 
             cv2.drawContours(output, [q], -1, np.random.randint(0, 255, 3, np.uint8).tolist(), 2)
@@ -116,7 +128,6 @@ class Detector:
             cv2.waitKey(0)
         
 
-        cv2.waitKey(0)
         return
 
 
