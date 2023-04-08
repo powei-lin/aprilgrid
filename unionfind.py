@@ -1,35 +1,37 @@
-from dataclasses import dataclass
-
-@dataclass
 class Ufrec:
-    # the parent of this node. If a node's parent is its own index,
-    # then it is a root.
-    parent: int # uint32_t 
+    __slots__ = ('parent', 'size')
+    def __init__(self, _parent: int, _size: int = 1):
+        # the parent of this node. If a node's parent is its own index,
+        # then it is a root.
+        self.parent: int = _parent # uint32_t 
 
-    # for the root of a connected component, the number of components
-    # connected to it. For intermediate values, it's not meaningful.
-    size: int # uint32_t
+        # for the root of a connected component, the number of components
+        # connected to it. For intermediate values, it's not meaningful.
+        self.size: int = _size # uint32_t
+
 
 class Unionfind:
     def __init__(self, _maxid: int) -> None:
         self.maxid = _maxid
-        self.data = [Ufrec(i, 1) for i in range(_maxid)]
+        self.data = {} #[Ufrec(i, 1) for i in range(_maxid)]
         
 
 # this one seems to be every-so-slightly faster than the recursive
 # version above.
 def unionfind_get_representative(uf: Unionfind, id: int):
     root = id
+    if id not in uf.data:
+        uf.data[id] = Ufrec(id, 1)
+    else:
+        # chase down the root
+        while (uf.data[root].parent != root):
+            root = uf.data[root].parent
 
-    # chase down the root
-    while (uf.data[root].parent != root):
-        root = uf.data[root].parent
-
-    # go back and collapse the tree.
-    while (uf.data[id].parent != root):
-        tmp = uf.data[id].parent
-        uf.data[id].parent = root
-        id = tmp
+        # go back and collapse the tree.
+        while (uf.data[id].parent != root):
+            tmp = uf.data[id].parent
+            uf.data[id].parent = root
+            id = tmp
 
     return root
 

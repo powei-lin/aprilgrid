@@ -5,7 +5,7 @@ from math import pi, cos
 @dataclass
 class ApriltagQuadThreshParams:
     # reject quads containing too few pixels
-    min_cluster_pixels: int = 5
+    min_cluster_pixels: int = 10
 
     # how many corner candidates to consider when segmenting a group
     # of pixels into a quad.

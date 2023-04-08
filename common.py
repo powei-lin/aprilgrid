@@ -1,5 +1,18 @@
+from functools import wraps
+from time import perf_counter
 import numpy as np
 from unionfind import Unionfind, unionfind_connect
+
+def timeit(func):
+    @wraps(func)
+    def timeit_wrapper(*args, **kwargs):
+        start_time = perf_counter()
+        result = func(*args, **kwargs)
+        end_time = perf_counter()
+        total_time = end_time - start_time
+        print(f'Function {func.__name__} Took {total_time:.4f} seconds')
+        return result
+    return timeit_wrapper
 
 def image_u8_decimate(img: np.ndarray, ffactor: float):
     height, width = img.shape
@@ -78,17 +91,21 @@ def max_pool(arr, block_size: int, _max=True):
 
 def do_unionfind_first_line(uf: Unionfind, im: np.ndarray, w: int):
     y = 0
-    v = 0
+    # 將像素值不等於 127 的索引提取出來
+    idx = np.where(im[y, 1:w-1] != 127)[0] + 1
 
-    for x in range(1, w-1):
-        v = im[y, x]
+    # 取出對應的像素值
+    vals = im[y, idx]
 
-        if (v == 127):
-            continue
+    # 計算左側像素的索引
+    left_idx = idx - 1
 
-        dx, dy = -1, 0
-        if (im[(y + dy), x + dx] == v):
-            unionfind_connect(uf, y*w + x, (y + dy)*w + x + dx)
+    # 找出左側像素與當前像素值相等的索引
+    eq_idx = np.where(im[y, left_idx] == vals)[0]
+
+    # 聯合左側像素
+    for i in eq_idx:
+        unionfind_connect(uf, y * w + idx[i], y * w + left_idx[i])
 
 def do_unionfind_line2(uf: Unionfind, im: np.ndarray, w: int, y: int):
     assert(y > 0)

@@ -1,9 +1,10 @@
 from dataclasses import dataclass
 import numpy as np
 import cv2
+from time import perf_counter
 from qtp import ApriltagQuadThreshParams
 from unionfind import Unionfind, unionfind_get_representative, unionfind_get_set_size
-from common import max_pool, do_unionfind_first_line, do_unionfind_line2
+from common import max_pool, do_unionfind_first_line, do_unionfind_line2, timeit
 
 @dataclass
 class Detector:
@@ -65,6 +66,7 @@ class Detector:
         quads = self.apriltag_quad_thresh(quad_im)
         pass
 
+    @timeit
     def connected_components(self, threshim: np.ndarray, w: int, h: int):
         uf = Unionfind(w * h)
         
@@ -74,17 +76,83 @@ class Detector:
             do_unionfind_line2(uf, threshim, w, y)
 
         return uf
-
+    @timeit
     def apriltag_quad_thresh(self, im: np.ndarray):
         # step 1. threshold the image, creating the edge image.
         h, w = im.shape[0], im.shape[1]
 
         threshim = self.threshold(im)
+        cv2.imshow("threshim", threshim)
+        # find all contours
+        def ratio(c, max_n, min_n):
+            x,y,w,h = cv2.boundingRect(c)
+            if( 1.0*w/h < max_n and 1.0*w/h > min_n):
+                return True
+            else:
+                return False
+        (cnts, _) = cv2.findContours(threshim, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+        # cnts = [c for c in cnts if  6000 > cv2.contourArea(c) > self.qtp.min_cluster_pixels  and ratio(c, 1.2, 0.8)]
+        output = np.zeros((h, w, 3), dtype=np.uint8)
+        # cv2.drawContours(output, cnts, -1, (0, 255, 0), 2)
+
+        quads = [] #array of quad including four peak points
+        for c in cnts:
+            # if (h[3] < 0 and c.shape[0] >= 4):
+            if (c.shape[0] >= 4):
+                area = cv2.contourArea(c)
+                if area > self.qtp.min_cluster_pixels:
+                    hull = cv2.convexHull(c)
+                    if (area / cv2.contourArea(hull) > 0.8):
+                        quad = cv2.approxPolyDP(hull, 8, True)#maximum_area_inscribed
+                        if (len(quad) == 4):
+                            areaqued = cv2.contourArea(quad)
+                            areahull = cv2.contourArea(hull)
+                            if areaqued / areahull > 0.8 and areahull >= areaqued:
+                                quads.append(quad)
+        for i, q in enumerate(quads):
+
+            cv2.drawContours(output, [q], -1, np.random.randint(0, 255, 3, np.uint8).tolist(), 2)
+            cv2.imshow("cnts", output)
+            cv2.waitKey(0)
+        
+
+        cv2.waitKey(0)
+        return
+
 
         # step 2. find connected components.
-        print("aaa")
-        uf = self.connected_components(threshim, w, h)
+        # labels = cv2.connectedComponents(threshim)
+        # Applying threshold
+        cv2.imshow("thres", threshim)
+        # Apply the Component analysis function
+        analysis = timeit(cv2.connectedComponentsWithStats)(threshim,
+                                                    4,
+                                                    cv2.CV_32S,
+                                                    cv2.CCL_GRANA)
+        (totalLabels, label_ids, values, centroid) = analysis
+        print(values.shape)
+        # return
         
+        # Initialize a new image to store 
+        # all the output components
+        output = np.zeros((h, w, 3), dtype=np.uint8)
+        
+        # Loop through each component
+        for i in range(0, totalLabels):
+            
+            # Area of the component
+            area = values[i, cv2.CC_STAT_AREA] 
+            
+            if (area > self.qtp.min_cluster_pixels):
+                componentMask = np.expand_dims((label_ids == i).astype(np.uint8), 2)
+                componentMask = np.repeat(componentMask, 3, axis=2) * np.random.randint(0, 255, 3, dtype=np.uint8)
+                output = cv2.bitwise_or(output, componentMask)
+        
+        
+                cv2.imshow("Filtered Components", output)
+                cv2.waitKey(0)
+        return
+        uf = self.connected_components(threshim, w, h)
         # make segmentation image.
         if (True):
             d = np.zeros((h, w, 3), np.uint8)
@@ -126,6 +194,7 @@ class Detector:
 
         # return quads;
 
+    @timeit
     def threshold(self, im: np.ndarray) -> np.ndarray:
         w = im.shape[1]
         h = im.shape[0]
@@ -183,6 +252,7 @@ class Detector:
         im_diff = im_max - im_min
         threshim = np.where( im_diff < self.qtp.min_white_black_diff, np.uint8(127),
                             np.where( im > (im_min + im_diff // 2), np.uint8(255), np.uint8(0)))
+        # threshim = np.where( im_diff < self.qtp.min_white_black_diff, np.uint8(0), im)
         # debug
         # print(threshim.dtype)
         # print(im_diff.shape)
