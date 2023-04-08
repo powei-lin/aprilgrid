@@ -7,7 +7,7 @@ name = "aprilgrid"
 description = ''
 readme = "README.md"
 requires-python = ">=3.7"
-license = "MIT"
+license = "BSD"
 keywords = []
 authors = [
   { name = "Powei Lin", email = "poweilin1994@gmail.com" },

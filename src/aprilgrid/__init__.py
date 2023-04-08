@@ -1,3 +1,3 @@
-from .aprilgrid import Detector
+from .detector import Detector
 
 __all__ = ['Detector']
