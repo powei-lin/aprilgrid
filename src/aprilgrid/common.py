@@ -2,6 +2,8 @@ from functools import wraps
 from time import perf_counter
 import numpy as np
 
+def random_color() -> list:
+    return np.random.randint(0, 255, 3, np.uint8).tolist()
 
 def timeit(func):
     @wraps(func)

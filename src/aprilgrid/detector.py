@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 from .tag_family import TAG_FAMILY_DICT
 from .qtp import ApriltagQuadThreshParams
-from .common import max_pool
+from .common import max_pool, random_color
 
 
 @dataclass
@@ -64,12 +64,12 @@ class Detector:
                     #     }
                     # }
         # detect
-        quad_im = img
+        quad_im = cv2.GaussianBlur(img, (3, 3), 1)
         quads = self.apriltag_quad_thresh(quad_im)
         # print(len(quads[0]))
         # Step 2. Decode tags from each quad.
         # refine_edge
-        winSize = (5, 5)
+        winSize = (7, 7)
         zeroZone = (-1, -1)
         criteria = (cv2.TERM_CRITERIA_EPS + cv2.TermCriteria_COUNT, 40, 0.001)
         quads = [cv2.cornerSubPix(img, quad.astype(
@@ -90,13 +90,23 @@ class Detector:
         h, w = im.shape[0], im.shape[1]
 
         threshim = self.threshold(im)
-        # cv2.imshow("threshim", threshim)
+        cv2.imshow("threshim", threshim)
         # find all contours
+        def ratio(c, max_n, min_n):
+            x,y,w,h = cv2.boundingRect(c)
+            if( 1.0*w/h < max_n and 1.0*w/h > min_n):
+                return True
+            else:
+                return False
+        # threshim = cv2.GaussianBlur(threshim, (3, 3), 1)
         (cnts, _) = cv2.findContours(threshim,
                                      cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
-        # cnts = [c for c in cnts if  6000 > cv2.contourArea(c) > self.qtp.min_cluster_pixels  and ratio(c, 1.2, 0.8)]
+        # cnts = [c for c in cnts if  9000 > cv2.contourArea(c) > self.qtp.min_cluster_pixels  and ratio(c, 1.3, 0.7)]
         output = np.zeros((h, w, 3), dtype=np.uint8)
-        # cv2.drawContours(output, cnts, -1, (0, 255, 0), 2)
+        # for c in cnts:
+        #     cv2.drawContours(output, [c], -1, random_color(), 2)
+        #     cv2.imshow("debug", output)
+        #     cv2.waitKey(0)
 
         quads = []  # array of quad including four peak points
         for c in cnts:
@@ -108,12 +118,18 @@ class Detector:
                     if (area / cv2.contourArea(hull) > 0.8):
                         # maximum_area_inscribed
                         quad = cv2.approxPolyDP(hull, 8, True)
+                        # cv2.drawContours(output, [quad], -1, random_color(), 2)
+                        # cv2.imshow("debug", output)
+                        # cv2.waitKey(0)
                         if (len(quad) == 4):
                             areaqued = cv2.contourArea(quad)
                             areahull = cv2.contourArea(hull)
                             if areaqued / areahull > 0.8 and areahull >= areaqued:
                                 # Calculate the refined corner locations
                                 quads.append(quad)
+        cv2.drawContours(output, quads, -1, (0, 255, 0), 2)
+        cv2.imshow("debug", output)
+        # cv2.waitKey(0)
         return quads
 
     def threshold(self, im: np.ndarray) -> np.ndarray:
