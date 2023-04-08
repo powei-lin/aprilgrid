@@ -27,6 +27,7 @@ img = cv2.imread("001.jpg", cv2.IMREAD_GRAYSCALE)
 img = cv2.resize(img, (952, 1264), None)
 img_color = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
 detections = timeit(d.detect)(img)
+exit()
 for (id, quad) in detections:
     center = np.round(np.average(quad, axis=0)).astype(np.int32)
 
@@ -35,9 +36,9 @@ for (id, quad) in detections:
 
 # print(img.shape)
 # print(im_max.shape)
-cv2.imshow("im", img_color)
+# cv2.imshow("im", img_color)
 # cv2.imshow("im_max", im_max)
-cv2.waitKey(0)
+# cv2.waitKey(0)
 # print(arr)
 # m, n = arr.shape
 # print(arr.reshape(m//2, 2, n//2, 2))
