@@ -65,7 +65,7 @@ class Detector:
         # detect
         quad_im = img
         quads = self.apriltag_quad_thresh(quad_im)
-        print(len(quads[0]))
+        # print(len(quads[0]))
         # Step 2. Decode tags from each quad.
         # refine_edge
         winSize = (5, 5)
@@ -73,7 +73,8 @@ class Detector:
         criteria = (cv2.TERM_CRITERIA_EPS + cv2.TermCriteria_COUNT, 40, 0.001)
         quads = [cv2.cornerSubPix(img, quad.astype(np.float32), winSize, zeroZone, criteria) for quad in quads]
         tf = Tag_family(6, 2)
-        tf.decodeQuad(quads, img)
+        detections = tf.decodeQuad(quads, img)
+        return detections
         # img_color = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
         # for q in quads:
         #     for c in q:
@@ -100,7 +101,7 @@ class Detector:
         h, w = im.shape[0], im.shape[1]
 
         threshim = self.threshold(im)
-        cv2.imshow("threshim", threshim)
+        # cv2.imshow("threshim", threshim)
         # find all contours
         (cnts, _) = cv2.findContours(threshim, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
         # cnts = [c for c in cnts if  6000 > cv2.contourArea(c) > self.qtp.min_cluster_pixels  and ratio(c, 1.2, 0.8)]

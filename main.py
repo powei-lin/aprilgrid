@@ -1,7 +1,12 @@
 import numpy as np
 # from common import image_u8_decimate, max_pool
+from common import timeit
 import cv2
 from apriltag import Detector
+# a = np.array([True])
+# b = np.array([[True], [False]])
+# print(a != b)
+# exit()
 # [format(t, "0{}b".format(code_size)) for t in tag_codes]
 
 # x = np.array([[1, 3], [2, 4]])
@@ -20,12 +25,19 @@ from apriltag import Detector
 d = Detector()
 img = cv2.imread("001.jpg", cv2.IMREAD_GRAYSCALE)
 img = cv2.resize(img, (952, 1264), None)
-d.detect(img)
+img_color = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+detections = timeit(d.detect)(img)
+for (id, quad) in detections:
+    center = np.round(np.average(quad, axis=0)).astype(np.int32)
+
+    cv2.putText(img_color, f"{id}", center[0], 1, 1, (0, 0, 255))
+
+
 # print(img.shape)
 # print(im_max.shape)
-# cv2.imshow("im", img)
+cv2.imshow("im", img_color)
 # cv2.imshow("im_max", im_max)
-# cv2.waitKey(0)
+cv2.waitKey(0)
 # print(arr)
 # m, n = arr.shape
 # print(arr.reshape(m//2, 2, n//2, 2))
