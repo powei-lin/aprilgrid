@@ -102,13 +102,11 @@ class Detector:
                     b = color[2]
 
                     if (r == 0 and g == 0 and b == 0):
-                        r = colors[v][0] = np.random.randint(0, 150)
-                        g = colors[v][1] = np.random.randint(0, 150)
-                        b = colors[v][2] = np.random.randint(0, 150)
+                        r, g, b = colors[v] = np.random.randint(0, 150, 3)
 
                     d[y, x, 0] = r
-                    d[y, x, 1] = r
-                    d[y, x, 2] = r
+                    d[y, x, 1] = g
+                    d[y, x, 2] = b
 
             cv2.imwrite("debug.png", d)
         # print(uf.data)
