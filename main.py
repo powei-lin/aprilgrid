@@ -2,6 +2,7 @@ import numpy as np
 # from common import image_u8_decimate, max_pool
 import cv2
 from apriltag import Detector
+# [format(t, "0{}b".format(code_size)) for t in tag_codes]
 
 # x = np.array([[1, 3], [2, 4]])
 # print(x)

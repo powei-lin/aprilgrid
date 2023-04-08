@@ -1,11 +1,21 @@
 from dataclasses import dataclass
 import numpy as np
+from tag_codes import AprilTagCodes
 import cv2
 
 @dataclass
 class Tag_family:
     _d: int
     _blackBorder: int
+
+    def __post_init__(self):
+        self.ll = [np.array([bool(int(i)) for i in np.binary_repr(tag, 36)]) for tag in AprilTagCodes.t36h11]
+
+    def decode(self, detect_code: np.ndarray, quad):
+        scores = [np.count_nonzero(detect_code.flatten()!= c ) for c in self.ll]
+        argmin = np.argmin(scores)
+        
+        print(f"best tag: {argmin}, hamming: {scores[argmin]}")
 
     def decodeQuad(self, quads, gray: np.ndarray):
         """
@@ -28,7 +38,7 @@ class Tag_family:
             debug_img = cv2.warpPerspective(gray, H, (marker_edge_bit, marker_edge_bit))
             avg = np.average(debug_img)
             detect_code = np.where(debug_img[self._blackBorder:-self._blackBorder, self._blackBorder: -self._blackBorder] > avg, True, False)
-            # self._decode(detect_code, quad)
+            self.decode(detect_code, quad)
             print(detect_code)
             print(avg)
             # print(debug_img.shape)

@@ -2,7 +2,7 @@ from dataclasses import dataclass
 import numpy as np
 import cv2
 from time import perf_counter
-from tagFamilies import Tag36h11class
+from tag_family import Tag_family
 from qtp import ApriltagQuadThreshParams
 from unionfind import Unionfind, unionfind_get_representative, unionfind_get_set_size
 from common import max_pool, do_unionfind_first_line, do_unionfind_line2, timeit
@@ -72,7 +72,7 @@ class Detector:
         zeroZone = (-1, -1)
         criteria = (cv2.TERM_CRITERIA_EPS + cv2.TermCriteria_COUNT, 40, 0.001)
         quads = [cv2.cornerSubPix(img, quad.astype(np.float32), winSize, zeroZone, criteria) for quad in quads]
-        tf = Tag36h11class()
+        tf = Tag_family(6, 2)
         tf.decodeQuad(quads, img)
         # img_color = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
         # for q in quads:
