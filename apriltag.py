@@ -12,7 +12,8 @@ class Detector:
     quad_sigma = 0.0
     refine_edges: bool = True
     decode_sharpening: float = 0.25
-    qtp: ApriltagQuadThreshParams = ApriltagQuadThreshParams()
+    def __post_init__(self):
+        self.qtp = ApriltagQuadThreshParams()
 
     # td->tag_families = zarray_create(sizeof(apriltag_family_t*));
 
