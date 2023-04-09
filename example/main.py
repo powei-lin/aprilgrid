@@ -4,13 +4,11 @@ from aprilgrid import Detector
 from glob import glob
 
 if __name__ == '__main__':
-    file_list = sorted(glob("dataset-calib-cam1_1024_16/mav0/cam0/data/*.png"))
+    # file_list = sorted(glob("dataset-calib-cam1_1024_16/mav0/cam0/data/*.png"))
     # file_list = sorted(glob("dataset-calib-cam1_512_16/mav0/cam0/data/*.png"))
-    # file_list = sorted(glob("example/*.jpg"))
+    file_list = sorted(glob("example/*.jpg"))
     detector = Detector('t36h11')
     for i, file_name in enumerate(file_list):
-        # if i < 76:
-        #     continue
         img = cv2.imread(file_name, cv2.IMREAD_GRAYSCALE)
         # img = cv2.resize(img, (952, 1264), None)
         img_color = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)

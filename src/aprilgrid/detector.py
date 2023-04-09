@@ -69,15 +69,16 @@ class Detector:
         # step 1. threshold the image, creating the edge image.
         h, w = im.shape[0], im.shape[1]
 
-        im_dilate = cv2.dilate(im, np.eye(3, 3, dtype=np.uint8))
+        im_copy = im.copy()
 
-        threshim = self.threshold2(im_dilate)
+        threshim = self.threshold(im_copy)
         # cv2.imshow("threshim", threshim)
         # threshim = cv2.GaussianBlur(threshim, (3, 3), 1)
         (cnts, _) = cv2.findContours(threshim,
                                      cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
-        # cnts = [c for c in cnts if  9000 > cv2.contourArea(c) > self.qtp.min_cluster_pixels  and ratio(c, 1.3, 0.7)]
-        output = np.zeros((h, w, 3), dtype=np.uint8)
+
+        # debug
+        # output = np.zeros((h, w, 3), dtype=np.uint8)
         # for c in cnts:
         #     cv2.drawContours(output, [c], -1, random_color(), 2)
         #     cv2.imshow("debug", output)
@@ -85,20 +86,20 @@ class Detector:
 
         quads = []  # array of quad including four peak points
         for c in cnts:
-            # if (h[3] < 0 and c.shape[0] >= 4):
             if (c.shape[0] >= 4):
                 area = cv2.contourArea(c)
                 if area > self.qtp.min_cluster_pixels:
                     hull = cv2.convexHull(c)
+                    areahull = cv2.contourArea(hull)
+                    # debug
                     # cv2.drawContours(output, [c], -1, random_color(), 2)
                     # cv2.imshow("debug", output)
                     # cv2.waitKey(0)
-                    if (area / cv2.contourArea(hull) > 0.8):
+                    if (area / areahull > 0.8):
                         # maximum_area_inscribed
                         quad = cv2.approxPolyDP(hull, 8, True)
                         if (len(quad) == 4):
                             areaqued = cv2.contourArea(quad)
-                            areahull = cv2.contourArea(hull)
                             if areaqued / areahull > 0.8 and areahull >= areaqued:
                                 # Calculate the refined corner locations
                                 quads.append(quad)
@@ -107,7 +108,7 @@ class Detector:
         # cv2.waitKey(0)
         return quads
 
-    def threshold2(self, im: np.ndarray) -> np.ndarray:
+    def threshold(self, im: np.ndarray) -> np.ndarray:
         h, w = im.shape
 
         tilesz = 4
@@ -133,18 +134,14 @@ class Detector:
         # dd = np.where(diff < self.qtp.min_white_black_diff, 127, im_min)
         threshim = np.where(im_diff < self.qtp.min_white_black_diff, np.uint8(0),
                             np.where(im > (im_min + im_diff // 2), np.uint8(255), np.uint8(0)))
+        
+        # hires can try dilate twice
         threshim = cv2.dilate(threshim, kernel0)
-        # threshim = cv2.dilate(threshim, kernel0)
-        # cv2.imshow("im_max", im_max)
-        # cv2.imshow("im_min", im_min)
-        # cv2.imshow("diff", diff)
-
-        # cv2.waitKey(0)
         return threshim
 
         
         
-    def threshold(self, im: np.ndarray) -> np.ndarray:
+    def threshold_old(self, im: np.ndarray) -> np.ndarray:
         w = im.shape[1]
         h = im.shape[0]
 
