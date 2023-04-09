@@ -19,56 +19,60 @@ class Detector:
     def __post_init__(self):
         self.tag_family = TAG_FAMILY_DICT[self.tag_family_name]
         self.qtp = ApriltagQuadThreshParams()
+    
+    # def refine_edge(self, current_ratio: float, ):
+    #     if current_ratio < 1:
+    #         quads = [quad/new_size_ratio for quad in quads]
+
+    #     # print(len(quads[0]))
+    #     # Step 2. Decode tags from each quad.
+    #     # refine_edge
+    #     winSize = (9, 9)
+    #     zeroZone = (-1, -1)
+    #     criteria = (cv2.TERM_CRITERIA_EPS + cv2.TermCriteria_COUNT, 40, 0.001)
+    #     quads = [cv2.cornerSubPix(img, quad.astype(
+    #         np.float32), winSize, zeroZone, criteria) for quad in quads]
 
     def detect(self, img: np.ndarray) -> List[Detection]:
         # step 1 resize
         # detect
         max_size = np.max(img.shape)
-        quad_im = cv2.GaussianBlur(img, (3, 3), 1)
+        im_blur = cv2.GaussianBlur(img, (3, 3), 1)
+        im_blur_resize = im_blur.copy()
         new_size_ratio = 1
         if max_size > 1000:
             new_size_ratio = 1000.0 / max_size
-            quad_im = cv2.resize(quad_im, None, None, new_size_ratio, new_size_ratio)
+            im_blur_resize = cv2.resize(im_blur_resize, None, None, new_size_ratio, new_size_ratio)
         
-        quad_im = cv2.dilate(quad_im, np.eye(3, 3, dtype=np.uint8))
         # threshim = cv2.dilate(threshim, kernel0)
-        quads = self.apriltag_quad_thresh(quad_im)
-        if new_size_ratio < 1:
-            quads = [quad/new_size_ratio for quad in quads]
 
-        # print(len(quads[0]))
-        # Step 2. Decode tags from each quad.
-        # refine_edge
+        quads = self.apriltag_quad_thresh(im_blur_resize)
+
+        # refine corner
         winSize = (5, 5)
         zeroZone = (-1, -1)
         criteria = (cv2.TERM_CRITERIA_EPS + cv2.TermCriteria_COUNT, 40, 0.001)
+
+        # refine on small image
+        if new_size_ratio < 1:
+            quads = [cv2.cornerSubPix(im_blur_resize, quad.astype(
+                np.float32), winSize, zeroZone, criteria) for quad in quads]
+            quads = [quad/new_size_ratio for quad in quads]
+
+        # refine on oringinal image
         quads = [cv2.cornerSubPix(img, quad.astype(
             np.float32), winSize, zeroZone, criteria) for quad in quads]
         detections = self.tag_family.decodeQuad(quads, img)
         return detections
-        # img_color = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-        # for q in quads:
-        #     for c in q:
-        #         cv2.circle(img_color, np.round(c[0]).astype(np.int32), 5, (0,0,255))
-        # cv2.imshow("color", img_color)
-        # cv2.waitKey(0)
-
-        # decode
 
     def apriltag_quad_thresh(self, im: np.ndarray):
         # step 1. threshold the image, creating the edge image.
         h, w = im.shape[0], im.shape[1]
 
-        # threshim = self.threshold(im)
-        threshim = self.threshold2(im)
-        cv2.imshow("threshim", threshim)
-        # find all contours
-        def ratio(c, max_n, min_n):
-            x,y,w,h = cv2.boundingRect(c)
-            if( 1.0*w/h < max_n and 1.0*w/h > min_n):
-                return True
-            else:
-                return False
+        im_dilate = cv2.dilate(im, np.eye(3, 3, dtype=np.uint8))
+
+        threshim = self.threshold2(im_dilate)
+        # cv2.imshow("threshim", threshim)
         # threshim = cv2.GaussianBlur(threshim, (3, 3), 1)
         (cnts, _) = cv2.findContours(threshim,
                                      cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
