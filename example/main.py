@@ -6,7 +6,7 @@ from glob import glob
 if __name__ == '__main__':
     file_list = sorted(glob("dataset-calib-cam1_1024_16/mav0/cam0/data/*.png"))
     # file_list = sorted(glob("dataset-calib-cam1_512_16/mav0/cam0/data/*.png"))
-    # file_list = sorted(glob("example/*.jpg"))
+    # file_list = sorted(glob("example/data/*.jpg"))
     detector = Detector('t36h11')
     count = 0
     for i, file_name in enumerate(file_list):
