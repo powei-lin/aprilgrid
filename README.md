@@ -28,6 +28,8 @@ pip install -e .
 
 ## TODO
 - [ ] Clean up unused debug code.
+- [ ] Add output for opencv calibrate camera.
+- [ ] Provide pregenerated pdf and easy way to customize.
 - [ ] Support all tag families.
 - [ ] Accelerate.
 - [ ] Robustness.
