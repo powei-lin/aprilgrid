@@ -2,7 +2,7 @@
 
 aprilgrid: Pure python version of aprilgrid
 
-<img src="example/showcase.avif" width="400" alt="Slow down for show case.">
+<img src="example/showcase.avif" width="600" alt="Slow down for show case.">
 
 ## Install from PyPI
 This is the recommended and easiest way to install aprilgrid.
