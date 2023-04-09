@@ -8,7 +8,7 @@ from pillow_avif import AvifImagePlugin
 import matplotlib.colors as mcolors
 
 if __name__ == '__main__':
-    file_list = sorted(glob("dataset-calib-cam1_1024_16/mav0/cam0/data/*.png"))
+    file_list = sorted(glob("cam0/data/*.png"))
     # file_list = sorted(glob("dataset-calib-cam1_512_16/mav0/cam0/data/*.png"))
     # file_list = sorted(glob("example/data/*.jpg"))
     detector = Detector('t36h11')
@@ -20,9 +20,9 @@ if __name__ == '__main__':
     print(colors)
     # exit()
     color_dict = {}
-    for i, file_name in enumerate(file_list[120:]):
+    for i, file_name in enumerate(file_list):
         img = cv2.imread(file_name, cv2.IMREAD_GRAYSCALE)
-        # img = cv2.resize(img, (952, 1264), None)
+        img = cv2.resize(img, (1200, 900), None)
         img_color = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
         detections = detector.detect(img)
         ss = f"frame {i}, detect {len(detections)} tags"
@@ -30,7 +30,7 @@ if __name__ == '__main__':
         count += len(detections)
         for detection in detections:
             center = np.round(np.average(detection.corners, axis=0)).astype(np.int32)
-            cv2.putText(img_color, f"{detection.tag_id}", center[0], 5, 1, (255, 200, 0))
+            cv2.putText(img_color, f"{detection.tag_id}", center[0], 5, 1, (255, 200, 0), 2)
             for j, c in enumerate(detection.corners):
                 c = np.round(c[0]).astype(np.int32)
                 id = j
@@ -45,12 +45,12 @@ if __name__ == '__main__':
         cv2.imshow("im", img_color)
         # cv2.imshow("im_max", im_max)
         cv2.waitKey(1)
-        if i > 180:
+        if i > 240:
             break
     imgs[0].save(
                 "example.avif",
                 save_all=True,
                 append_images=imgs[1:],
-                duration=250
+                duration=80
             )
     print(f"avg: {count/len(file_list):.3f} tags")
