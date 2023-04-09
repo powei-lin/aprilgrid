@@ -1,18 +1,16 @@
 # Aprilgrid
 
-aprilgrid: Pure python version of aprilgid
+aprilgrid: Pure python version of aprilgrid
 
 ## Install from PyPI
 This is the recommended and easiest way to install aprilgrid.
 ```
 pip install aprilgrid
 ```
-We offer pre-built binary wheels for common operating systems. To install from source, see below.
 
 ## Usage
-Some examples of usage can be seen in the src/pupil_apriltags/bindings.py file.
+Some examples of usage can be seen in the example/main.py file.
 
-The Detector class is a wrapper around the Apriltags functionality. You can initialize it as following:
 ```py
 from aprilgrid import Detector
 
