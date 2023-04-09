@@ -2,7 +2,7 @@
 
 ### Pure python version of aprilgrid
 
-<img src="example/showcase.avif" width="600" alt="Slow down for show case.">
+<img src="example/showcase.avif" width="800" alt="Slow down for show case.">
 
 ## Install from PyPI
 ```
