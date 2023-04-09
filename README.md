@@ -5,7 +5,6 @@
 <img src="example/showcase.avif" width="600" alt="Slow down for show case.">
 
 ## Install from PyPI
-This is the recommended and easiest way to install aprilgrid.
 ```
 pip install aprilgrid
 ```
@@ -20,8 +19,16 @@ detector = Detector("t36h11")
 
 detector.detect(img)
 ```
-# clone the repository
+## Development
 ```sh
 git clone https://github.com/powei-lin/aprilgrid.git
 cd aprilgrid
+pip install -e .
 ```
+
+## TODO
+- [ ] Clean up unused debug code.
+- [ ] Support all tag families.
+- [ ] Accelerate.
+- [ ] Robustness.
+
