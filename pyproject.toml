@@ -32,7 +32,7 @@ dynamic = ["version"]
 [project.urls]
 Documentation = "https://github.com/powei-lin/AprilGrid#readme"
 Issues = "https://github.com/powei-lin/AprilGrid/issues"
-Source = "https://github.com/powei-lin/AprilGrid/NOPY"
+Source = "https://github.com/powei-lin/AprilGrid"
 
 [tool.hatch.version]
 source = "regex_commit"
@@ -54,7 +54,7 @@ python = ["37", "38", "39", "310", "311"]
 branch = true
 parallel = true
 omit = [
-  "nopy/__about__.py",
+  "aprilgrid/__about__.py",
 ]
 
 [tool.coverage.report]
