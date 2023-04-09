@@ -45,7 +45,7 @@ class TagFamily:
         edge_position = marker_edge_bit-0.5
         corners2 = np.expand_dims(np.array(
             [[edge_position, -0.5], [edge_position, edge_position], [-0.5, edge_position], [-0.5, -0.5]], np.float32), 1)
-        for quad in quads[14:]:
+        for quad in quads:
             debug_img = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
             # print(quad.shape)
             H, _ = cv2.findHomography(quad, corners2)
@@ -54,7 +54,7 @@ class TagFamily:
             avg = np.average(debug_img)
             # TODO add some filter
             detect_code = np.where(debug_img[self.border_bit:-self.border_bit,
-                                   self.border_bit: -self.border_bit] > avg*1.2, True, False)
+                                   self.border_bit: -self.border_bit] > avg+20, True, False)
             self.decode(detect_code, quad, detections)
         return detections
         # print(detect_code)
