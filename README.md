@@ -31,7 +31,7 @@ pip install -e .
 - [ ] Add output for opencv calibrate camera.
 - [ ] Provide pregenerated pdf and easy way to customize.
 - [ ] Support all tag families.
-- [ ] Accelerate.
+- [ ] Accelerate and multi-threading.
 - [ ] Robustness.
 
 ## Reference
