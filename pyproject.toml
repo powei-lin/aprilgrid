@@ -38,6 +38,9 @@ Issues = "https://github.com/powei-lin/AprilGrid/issues"
 source = "regex_commit"
 path = "src/aprilgrid/__about__.py"
 
+[tool.hatch.build]
+only-packages = true
+
 [tool.hatch.envs.default]
 dependencies = [
   "pytest",
