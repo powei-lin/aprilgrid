@@ -21,6 +21,8 @@ if __name__ == '__main__':
             cv2.putText(img_color, f"{detection.tag_id}", center[0], 1, 1, (0, 0, 255))
             for j, c in enumerate(detection.corners):
                 c = np.round(c[0]).astype(np.int32)
+                id = detection.tag_id*4+j
+                cv2.putText(img_color, f"{id}", c, 1, 1, (0, 0, 255))
                 cv2.circle(img_color, c, 3, (0, 255, 0))
 
 
@@ -29,4 +31,4 @@ if __name__ == '__main__':
         # img_color = cv2.resize(img_color, None, None, 0.3, 0.3)
         cv2.imshow("im", img_color)
         # cv2.imshow("im_max", im_max)
-        cv2.waitKey(1)
+        cv2.waitKey(0)

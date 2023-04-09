@@ -23,17 +23,20 @@ class TagFamily:
         self.marker_edge_bit = 2 * self.border_bit + self.marker_edge  # tagFamily.d 10
         edge_position = self.marker_edge_bit - 0.5
         self.tag_corners = np.expand_dims(np.array(
-            [[edge_position, -0.5], [edge_position, edge_position], [-0.5, edge_position], [-0.5, -0.5]], np.float32), 1)
+            [[-0.5, -0.5], [edge_position, -0.5], [edge_position, edge_position], [-0.5, edge_position]], np.float32), 1)
 
     def decode(self, detect_code: np.ndarray, quad, detections: List[Detection]):
         code_mat = detect_code.copy()
-        for _ in range(4):
+        for r in range(4):
             scores = np.count_nonzero(code_mat.flatten() != self.tag_bit_list, axis=1)
             best_score_idx = np.argmin(scores)
             best_score = scores[best_score_idx]
             if best_score < self._hamming_thres:
                 # print(f"best tag: {best_score_idx}, hamming: {best_score}")
-                detections.append(Detection(best_score_idx, quad))
+                new_quad = np.flip(np.roll(quad, -r, axis=0), axis=0)
+                detections.append(Detection(best_score_idx, new_quad))
+                if self.debug_level > 0:
+                    print(f"detect {best_score_idx} rotate {r} time")
                 return
             else:
                 code_mat = np.rot90(code_mat)

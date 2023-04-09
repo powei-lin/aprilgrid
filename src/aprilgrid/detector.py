@@ -105,7 +105,6 @@ class Detector:
 
     def threshold2(self, im: np.ndarray) -> np.ndarray:
         h, w = im.shape
-        print(h, w)
 
         tilesz = 4
         im_max = max_pool(im, tilesz, True)
