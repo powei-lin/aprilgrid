@@ -20,22 +20,8 @@ class Detector:
         self.tag_family = TAG_FAMILY_DICT[self.tag_family_name]
         self.qtp = ApriltagQuadThreshParams()
     
-    # def refine_edge(self, current_ratio: float, ):
-    #     if current_ratio < 1:
-    #         quads = [quad/new_size_ratio for quad in quads]
-
-    #     # print(len(quads[0]))
-    #     # Step 2. Decode tags from each quad.
-    #     # refine_edge
-    #     winSize = (9, 9)
-    #     zeroZone = (-1, -1)
-    #     criteria = (cv2.TERM_CRITERIA_EPS + cv2.TermCriteria_COUNT, 40, 0.001)
-    #     quads = [cv2.cornerSubPix(img, quad.astype(
-    #         np.float32), winSize, zeroZone, criteria) for quad in quads]
-
     def detect(self, img: np.ndarray) -> List[Detection]:
         # step 1 resize
-        # detect
         max_size = np.max(img.shape)
         im_blur = cv2.GaussianBlur(img, (3, 3), 1)
         im_blur_resize = im_blur.copy()
@@ -44,8 +30,7 @@ class Detector:
             new_size_ratio = 1000.0 / max_size
             im_blur_resize = cv2.resize(im_blur_resize, None, None, new_size_ratio, new_size_ratio)
         
-        # threshim = cv2.dilate(threshim, kernel0)
-
+        # detect quads
         quads = self.apriltag_quad_thresh(im_blur_resize)
 
         # refine corner
@@ -84,25 +69,25 @@ class Detector:
         #     cv2.imshow("debug", output)
         #     cv2.waitKey(0)
 
+        cnts = [c for c in cnts if (c.shape[0] >= 4)]
         quads = []  # array of quad including four peak points
         for c in cnts:
-            if (c.shape[0] >= 4):
-                area = cv2.contourArea(c)
-                if area > self.qtp.min_cluster_pixels:
-                    hull = cv2.convexHull(c)
-                    areahull = cv2.contourArea(hull)
-                    # debug
-                    # cv2.drawContours(output, [c], -1, random_color(), 2)
-                    # cv2.imshow("debug", output)
-                    # cv2.waitKey(0)
-                    if (area / areahull > 0.8):
-                        # maximum_area_inscribed
-                        quad = cv2.approxPolyDP(hull, 8, True)
-                        if (len(quad) == 4):
-                            areaqued = cv2.contourArea(quad)
-                            if areaqued / areahull > 0.8 and areahull >= areaqued:
-                                # Calculate the refined corner locations
-                                quads.append(quad)
+            area = cv2.contourArea(c)
+            if area > self.qtp.min_cluster_pixels:
+                hull = cv2.convexHull(c)
+                areahull = cv2.contourArea(hull)
+                # debug
+                # cv2.drawContours(output, [c], -1, random_color(), 2)
+                # cv2.imshow("debug", output)
+                # cv2.waitKey(0)
+                if (area / areahull > 0.8):
+                    # maximum_area_inscribed
+                    quad = cv2.approxPolyDP(hull, 8, True)
+                    if (len(quad) == 4):
+                        areaqued = cv2.contourArea(quad)
+                        if areaqued / areahull > 0.8 and areahull >= areaqued:
+                            # Calculate the refined corner locations
+                            quads.append(quad)
         # cv2.drawContours(output, quads, -1, (0, 255, 0), 2)
         # cv2.imshow("debug", output)
         # cv2.waitKey(0)
