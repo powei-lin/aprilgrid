@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "aprilgrid"
-description = ''
+description = 'Pure python version of aprilgrid.'
 readme = "README.md"
 requires-python = ">=3.7"
 license = "BSD-3-Clause"
@@ -30,9 +30,9 @@ dependencies = [
 dynamic = ["version"]
 
 [project.urls]
+Source = "https://github.com/powei-lin/AprilGrid"
 Documentation = "https://github.com/powei-lin/AprilGrid#readme"
 Issues = "https://github.com/powei-lin/AprilGrid/issues"
-Source = "https://github.com/powei-lin/AprilGrid"
 
 [tool.hatch.version]
 source = "regex_commit"
