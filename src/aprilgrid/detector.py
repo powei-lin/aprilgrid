@@ -1,8 +1,10 @@
 from dataclasses import dataclass
 import numpy as np
 import cv2
+from typing import List
 from .tag_family import TAG_FAMILY_DICT
 from .qtp import ApriltagQuadThreshParams
+from .detection import Detection
 from .common import max_pool, random_color
 
 
@@ -18,58 +20,26 @@ class Detector:
         self.tag_family = TAG_FAMILY_DICT[self.tag_family_name]
         self.qtp = ApriltagQuadThreshParams()
 
-    # td->tag_families = zarray_create(sizeof(apriltag_family_t*));
-
-    def detect(self, img: np.ndarray):
+    def detect(self, img: np.ndarray) -> List[Detection]:
         # step 1 resize
-        if (self.quad_sigma != 0.0):
-            # // compute a reasonable kernel width by figuring that the
-            # // kernel should go out 2 std devs.
-            # //
-            # // max sigma          ksz
-            # // 0.499              1  (disabled)
-            # // 0.999              3
-            # // 1.499              5
-            # // 1.999              7
-
-            sigma = abs(float(self.quad_sigma))
-
-            ksz = int(4 * sigma)  # // 2 std devs in each direction
-            if ((ksz & 1) == 0):
-                ksz += 1
-
-            if (ksz > 1):
-                if (self.quad_sigma > 0):
-                    # // Apply a blur
-                    # image_u8_gaussian_blur(quad_im, sigma, ksz)
-                    pass
-                else:
-                    # // SHARPEN the image by subtracting the low frequency components.
-                    # image_u8_t *orig = image_u8_copy(quad_im)
-                    # image_u8_gaussian_blur(quad_im, sigma, ksz);
-                    pass
-
-                    # for (int y = 0; y < orig->height; y++) {
-                    #     for (int x = 0; x < orig->width; x++) {
-                    #         int vorig = orig->buf[y*orig->stride + x];
-                    #         int vblur = quad_im->buf[y*quad_im->stride + x];
-
-                    #         int v = 2*vorig - vblur;
-                    #         if (v < 0)
-                    #             v = 0;
-                    #         if (v > 255)
-                    #             v = 255;
-
-                    #         quad_im->buf[y*quad_im->stride + x] = (uint8_t) v;
-                    #     }
-                    # }
         # detect
+        max_size = np.max(img.shape)
         quad_im = cv2.GaussianBlur(img, (3, 3), 1)
+        new_size_ratio = 1
+        if max_size > 1000:
+            new_size_ratio = 1000.0 / max_size
+            quad_im = cv2.resize(quad_im, None, None, new_size_ratio, new_size_ratio)
+        
+        quad_im = cv2.dilate(quad_im, np.eye(3, 3, dtype=np.uint8))
+        # threshim = cv2.dilate(threshim, kernel0)
         quads = self.apriltag_quad_thresh(quad_im)
+        if new_size_ratio < 1:
+            quads = [quad/new_size_ratio for quad in quads]
+
         # print(len(quads[0]))
         # Step 2. Decode tags from each quad.
         # refine_edge
-        winSize = (7, 7)
+        winSize = (5, 5)
         zeroZone = (-1, -1)
         criteria = (cv2.TERM_CRITERIA_EPS + cv2.TermCriteria_COUNT, 40, 0.001)
         quads = [cv2.cornerSubPix(img, quad.astype(
@@ -89,7 +59,8 @@ class Detector:
         # step 1. threshold the image, creating the edge image.
         h, w = im.shape[0], im.shape[1]
 
-        threshim = self.threshold(im)
+        # threshim = self.threshold(im)
+        threshim = self.threshold2(im)
         cv2.imshow("threshim", threshim)
         # find all contours
         def ratio(c, max_n, min_n):
@@ -115,23 +86,61 @@ class Detector:
                 area = cv2.contourArea(c)
                 if area > self.qtp.min_cluster_pixels:
                     hull = cv2.convexHull(c)
+                    # cv2.drawContours(output, [c], -1, random_color(), 2)
+                    # cv2.imshow("debug", output)
+                    # cv2.waitKey(0)
                     if (area / cv2.contourArea(hull) > 0.8):
                         # maximum_area_inscribed
                         quad = cv2.approxPolyDP(hull, 8, True)
-                        # cv2.drawContours(output, [quad], -1, random_color(), 2)
-                        # cv2.imshow("debug", output)
-                        # cv2.waitKey(0)
                         if (len(quad) == 4):
                             areaqued = cv2.contourArea(quad)
                             areahull = cv2.contourArea(hull)
                             if areaqued / areahull > 0.8 and areahull >= areaqued:
                                 # Calculate the refined corner locations
                                 quads.append(quad)
-        cv2.drawContours(output, quads, -1, (0, 255, 0), 2)
-        cv2.imshow("debug", output)
+        # cv2.drawContours(output, quads, -1, (0, 255, 0), 2)
+        # cv2.imshow("debug", output)
         # cv2.waitKey(0)
         return quads
 
+    def threshold2(self, im: np.ndarray) -> np.ndarray:
+        h, w = im.shape
+        print(h, w)
+
+        tilesz = 4
+        im_max = max_pool(im, tilesz, True)
+        im_min = max_pool(im, tilesz, False)
+
+        # small_im = cv2.resize(im, None, None, 0.25, 0.25)
+        kernel0 = np.ones((3, 3), dtype=np.uint8)
+        im_max = cv2.dilate(im_max, kernel0)
+        # # im_max = cv2.resize(im_max, (w, h))
+        # kernel1 = np.ones((3, 3), dtype=np.uint8)
+        im_min = cv2.erode(im_min, kernel0)
+        # im_min = cv2.resize(im_min, (w, h))
+        im_min = np.repeat(np.repeat(im_min, tilesz, axis=1), tilesz, axis=0)
+        im_max = np.repeat(np.repeat(im_max, tilesz, axis=1), tilesz, axis=0)
+        
+        edge = max(h%tilesz, w%tilesz)
+        im_min = np.pad(im_min, (0, edge), 'edge')[:h, :w]
+        im_max = np.pad(im_max, (0, edge), 'edge')[:h, :w]
+
+        im_diff = im_max-im_min
+        # im_diff = cv2.resize(im_diff, (w, h))
+        # dd = np.where(diff < self.qtp.min_white_black_diff, 127, im_min)
+        threshim = np.where(im_diff < self.qtp.min_white_black_diff, np.uint8(0),
+                            np.where(im > (im_min + im_diff // 2), np.uint8(255), np.uint8(0)))
+        threshim = cv2.dilate(threshim, kernel0)
+        # threshim = cv2.dilate(threshim, kernel0)
+        # cv2.imshow("im_max", im_max)
+        # cv2.imshow("im_min", im_min)
+        # cv2.imshow("diff", diff)
+
+        # cv2.waitKey(0)
+        return threshim
+
+        
+        
     def threshold(self, im: np.ndarray) -> np.ndarray:
         w = im.shape[1]
         h = im.shape[0]
@@ -179,8 +188,8 @@ class Detector:
         # second, apply 3x3 max/min convolution to "blur" these values
         # over larger areas. This reduces artifacts due to abrupt changes
         # in the threshold value.
+        kernel = np.ones((3, 3), dtype=np.uint8)
         if True:
-            kernel = np.ones((3, 3), dtype=np.uint8)
             im_max = cv2.dilate(im_max, kernel)
             im_min = cv2.erode(im_min, kernel)
         im_min = np.repeat(np.repeat(im_min, tilesz, axis=1), tilesz, axis=0)
@@ -189,6 +198,7 @@ class Detector:
         im_diff = im_max - im_min
         threshim = np.where(im_diff < self.qtp.min_white_black_diff, np.uint8(127),
                             np.where(im > (im_min + im_diff // 2), np.uint8(255), np.uint8(0)))
+        threshim = cv2.dilate(threshim, kernel)
         # threshim = np.where( im_diff < self.qtp.min_white_black_diff, np.uint8(0), im)
         # debug
         # print(threshim.dtype)
