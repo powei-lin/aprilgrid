@@ -21,9 +21,10 @@ at_detector = Detector("t36h11")
 at_detector.detect(img)
 ```
 # clone the repository
+```sh
 git clone https://github.com/powei-lin/aprilgrid.git
 cd aprilgrid
-
+```
 # install apriltags in editable mode with development requirements
 ```sh
 pip install -e .[testing]
