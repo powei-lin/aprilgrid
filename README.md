@@ -2,6 +2,8 @@
 
 aprilgrid: Pure python version of aprilgrid
 
+!["Slow down for show case."](example/showcase.avif)
+
 ## Install from PyPI
 This is the recommended and easiest way to install aprilgrid.
 ```
