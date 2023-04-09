@@ -34,3 +34,5 @@ pip install -e .
 - [ ] Accelerate.
 - [ ] Robustness.
 
+## Reference
+https://github.com/ethz-asl/kalibr
