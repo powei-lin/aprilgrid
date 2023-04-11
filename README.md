@@ -1,6 +1,7 @@
 # Aprilgrid
 
 ### Pure python version of aprilgrid
+Inspired by [Apriltag](https://github.com/AprilRobotics/apriltag) and [Kalibr](https://github.com/ethz-asl/kalibr). There's lot of existing python binding of apriltag. But as everyone knows, python binding causes a lot of issues. So I rewrite a pure python version of apriltag and it's also able to detect aprilgrid.
 
 <img src="example/showcase.avif" width="800" alt="Slow down for show case.">
 
@@ -35,4 +36,5 @@ pip install -e .
 - [ ] Robustness.
 
 ## Reference
-https://github.com/ethz-asl/kalibr
+- https://github.com/AprilRobotics/apriltag
+- https://github.com/ethz-asl/kalibr
