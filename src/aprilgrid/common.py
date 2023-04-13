@@ -2,8 +2,10 @@ from functools import wraps
 from time import perf_counter
 import numpy as np
 
+
 def random_color() -> list:
     return np.random.randint(0, 255, 3, np.uint8).tolist()
+
 
 def timeit(func):
     @wraps(func)
@@ -15,6 +17,7 @@ def timeit(func):
         print(f'Function {func.__name__} Took {total_time:.4f} seconds')
         return result
     return timeit_wrapper
+
 
 def max_pool(arr, block_size: int, _max=True):
 

@@ -5,6 +5,7 @@ from .tag_codes import APRILTAG_CODE_DICT
 from .detection import Detection
 import cv2
 
+
 @dataclass
 class TagFamily:
     marker_edge: int
@@ -16,10 +17,11 @@ class TagFamily:
     def __post_init__(self):
         self.name = f"t{self.marker_edge**2}h{self.min_distance}"
         if self.name not in APRILTAG_CODE_DICT:
-            raise ValueError(f"{self.name} is not in {APRILTAG_CODE_DICT.keys()}")
+            raise ValueError(
+                f"{self.name} is not in {APRILTAG_CODE_DICT.keys()}")
         self.tag_bit_list = np.array([np.array([bool(int(i)) for i in np.binary_repr(
             tag, 36)]) for tag in APRILTAG_CODE_DICT[self.name]])
-        
+
         self.marker_edge_bit = 2 * self.border_bit + self.marker_edge  # tagFamily.d 10
         edge_position = self.marker_edge_bit - 0.5
         self.tag_corners = np.expand_dims(np.array(
@@ -28,7 +30,8 @@ class TagFamily:
     def decode(self, detect_code: np.ndarray, quad, detections: List[Detection]):
         code_mat = detect_code.copy()
         for r in range(4):
-            scores = np.count_nonzero(code_mat.flatten() != self.tag_bit_list, axis=1)
+            scores = np.count_nonzero(
+                code_mat.flatten() != self.tag_bit_list, axis=1)
             best_score_idx = np.argmin(scores)
             best_score = scores[best_score_idx]
             if best_score < self._hamming_thres:
@@ -69,8 +72,7 @@ class TagFamily:
             self.decode(detect_code, quad, detections)
         return detections
 
+
 TAG_FAMILY_DICT = {
     "t36h11": TagFamily(6, 2, 11)
 }
-
-    

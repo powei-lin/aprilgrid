@@ -14,12 +14,13 @@ class Detector:
     quad_sigma = 0.0
     refine_edges: bool = True
     decode_sharpening: float = 0.25
+    min_white_black_diff: int = 5
     debug_level: int = 0
 
     def __post_init__(self):
         self.tag_family = TAG_FAMILY_DICT[self.tag_family_name]
-        self.qtp = ApriltagQuadThreshParams()
-    
+        self.min_cluster_pixels = self.tag_family.marker_edge_bit**2
+
     def detect(self, img: np.ndarray) -> List[Detection]:
         # step 1 resize
         max_size = np.max(img.shape)
@@ -28,8 +29,9 @@ class Detector:
         new_size_ratio = 1
         if max_size > 1000:
             new_size_ratio = 1000.0 / max_size
-            im_blur_resize = cv2.resize(im_blur_resize, None, None, new_size_ratio, new_size_ratio)
-        
+            im_blur_resize = cv2.resize(
+                im_blur_resize, None, None, new_size_ratio, new_size_ratio)
+
         # detect quads
         quads = self.apriltag_quad_thresh(im_blur_resize)
 
@@ -73,7 +75,7 @@ class Detector:
         quads = []  # array of quad including four peak points
         for c in cnts:
             area = cv2.contourArea(c)
-            if area > self.qtp.min_cluster_pixels:
+            if area > self.min_cluster_pixels:
                 hull = cv2.convexHull(c)
                 areahull = cv2.contourArea(hull)
                 # debug
@@ -103,21 +105,19 @@ class Detector:
         im_min = cv2.erode(im_min, kernel0)
         im_min = np.repeat(np.repeat(im_min, tilesz, axis=1), tilesz, axis=0)
         im_max = np.repeat(np.repeat(im_max, tilesz, axis=1), tilesz, axis=0)
-        
-        edge = max(h%tilesz, w%tilesz)
+
+        edge = max(h % tilesz, w % tilesz)
         im_min = np.pad(im_min, (0, edge), 'edge')[:h, :w]
         im_max = np.pad(im_max, (0, edge), 'edge')[:h, :w]
 
         im_diff = im_max-im_min
-        threshim = np.where(im_diff < self.qtp.min_white_black_diff, np.uint8(0),
+        threshim = np.where(im_diff < self.min_white_black_diff, np.uint8(0),
                             np.where(im > (im_min + im_diff // 2), np.uint8(255), np.uint8(0)))
-        
+
         # hi-res img can try dilate twice
         threshim = cv2.dilate(threshim, kernel0)
         return threshim
 
-        
-        
     def threshold_old(self, im: np.ndarray) -> np.ndarray:
         w = im.shape[1]
         h = im.shape[0]
