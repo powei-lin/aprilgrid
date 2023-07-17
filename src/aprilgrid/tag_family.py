@@ -74,5 +74,8 @@ class TagFamily:
 
 
 TAG_FAMILY_DICT = {
-    "t36h11": TagFamily(6, 2, 11)
+    "t36h11": TagFamily(6, 2, 11, 3),
+    "t25h9": TagFamily(5, 2, 9, 2),
+    "t25h7": TagFamily(5, 2, 7, 2),
+    "t16h5": TagFamily(4, 2, 5, 1),
 }
