@@ -20,6 +20,11 @@ detector = Detector("t36h11")
 
 detector.detect(img)
 ```
+
+Kalibr uses 2 bit black border while apriltag3 uses 1 bit black border for each tag. The default of aprilgrid follows Kalibr. Please use `t36h11b1` if you're using tags with 1 bit black border.
+
+<img src="docs/tag_border_issue.png" width="400" alt="Slow down for show case.">
+
 ## Development
 ```sh
 git clone https://github.com/powei-lin/aprilgrid.git
@@ -28,7 +33,6 @@ pip install -e .
 ```
 
 ## TODO
-- [ ] Clean up unused debug code.
 - [ ] Add output for opencv calibrate camera.
 - [ ] Provide pregenerated pdf and easy way to customize.
 - [ ] Support all tag families.
