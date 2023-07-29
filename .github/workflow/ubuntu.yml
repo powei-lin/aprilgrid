@@ -1,0 +1,19 @@
+name: ubuntu
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    
+    - name: Pip install package
+      run: python3 -m pip install .
+
+    - name: Pytest
+      run: python3 -m pip install pytest && python3 -m pytest
