@@ -1,4 +1,5 @@
 # Aprilgrid
+[![Ubuntu Build Status](https://github.com/powei-lin/aprilgrid/workflows/ubuntu/badge.svg)](https://github.com/powei-lin/aprilgrid/actions/workflows/ubuntu.yml)
 
 ### Pure python version of aprilgrid
 Inspired by [Apriltag](https://github.com/AprilRobotics/apriltag) and [Kalibr](https://github.com/ethz-asl/kalibr). There are lots of existing python binding of Apriltag. But as everyone knows, python binding causes a lot of issues. So I rewrite a pure python version of Apriltag, and it's also able to detect Aprilgrid.
