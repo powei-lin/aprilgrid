@@ -20,7 +20,7 @@ class TagFamily:
             raise ValueError(
                 f"{self.name} is not in {APRILTAG_CODE_DICT.keys()}")
         self.tag_bit_list = np.array([np.array([bool(int(i)) for i in np.binary_repr(
-            tag, 36)]) for tag in APRILTAG_CODE_DICT[self.name]])
+            tag, self.marker_edge**2)]) for tag in APRILTAG_CODE_DICT[self.name]])
 
         self.marker_edge_bit = 2 * self.border_bit + self.marker_edge  # tagFamily.d 10
         edge_position = self.marker_edge_bit - 0.5
