@@ -1,4 +1,4 @@
-""" Supported April Tag Families
+"""Supported April Tag Families
 Get from following:
 https://github.com/ethz-asl/kalibr/blob/master/aslam_offline_calibration/kalibr/python/kalibr_create_target_pdf
 """
