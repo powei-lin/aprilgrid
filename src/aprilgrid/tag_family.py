@@ -17,21 +17,24 @@ class TagFamily:
     def __post_init__(self):
         self.name = f"t{self.marker_edge**2}h{self.min_distance}"
         if self.name not in APRILTAG_CODE_DICT:
-            raise ValueError(
-                f"{self.name} is not in {APRILTAG_CODE_DICT.keys()}")
-        self.tag_bit_list = np.array([np.array([bool(int(i)) for i in np.binary_repr(
-            tag, 36)]) for tag in APRILTAG_CODE_DICT[self.name]])
+            raise ValueError(f"{self.name} is not in {APRILTAG_CODE_DICT.keys()}")
+        self.tag_bit_list = np.array(
+            [np.array([bool(int(i)) for i in np.binary_repr(tag, 36)]) for tag in APRILTAG_CODE_DICT[self.name]]
+        )
 
         self.marker_edge_bit = 2 * self.border_bit + self.marker_edge  # tagFamily.d 10
         edge_position = self.marker_edge_bit - 0.5
-        self.tag_corners = np.expand_dims(np.array(
-            [[-0.5, -0.5], [edge_position, -0.5], [edge_position, edge_position], [-0.5, edge_position]], np.float32), 1)
+        self.tag_corners = np.expand_dims(
+            np.array(
+                [[-0.5, -0.5], [edge_position, -0.5], [edge_position, edge_position], [-0.5, edge_position]], np.float32
+            ),
+            1,
+        )
 
     def decode(self, detect_code: np.ndarray, quad, detections: List[Detection]):
         code_mat = detect_code.copy()
         for r in range(4):
-            scores = np.count_nonzero(
-                code_mat.flatten() != self.tag_bit_list, axis=1)
+            scores = np.count_nonzero(code_mat.flatten() != self.tag_bit_list, axis=1)
             best_score_idx = np.argmin(scores)
             best_score = scores[best_score_idx]
             if best_score < self._hamming_thres:
@@ -59,16 +62,18 @@ class TagFamily:
         for quad in quads:
             H, _ = cv2.findHomography(quad, self.tag_corners)
 
-            tag_img = cv2.warpPerspective(
-                gray, H, (self.marker_edge_bit, self.marker_edge_bit))
+            tag_img = cv2.warpPerspective(gray, H, (self.marker_edge_bit, self.marker_edge_bit))
             if self.debug_level > 0:
                 cv2.imshow("debug single tag", tag_img)
                 cv2.waitKey(0)
 
             avg_brightness = np.average(tag_img)
             # TODO add some filter
-            detect_code = np.where(tag_img[self.border_bit:-self.border_bit,
-                                   self.border_bit: -self.border_bit] > avg_brightness+20, True, False)
+            detect_code = np.where(
+                tag_img[self.border_bit : -self.border_bit, self.border_bit : -self.border_bit] > avg_brightness + 20,
+                True,
+                False,
+            )
             self.decode(detect_code, quad, detections)
         return detections
 

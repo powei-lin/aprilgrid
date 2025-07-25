@@ -15,6 +15,7 @@ class Detector:
     refine_edges: bool = True
     decode_sharpening: float = 0.25
     min_white_black_diff: int = 5
+    large_image_threshold: float = 1000.0
     debug_level: int = 0
 
     def __post_init__(self):
@@ -27,10 +28,9 @@ class Detector:
         im_blur = cv2.GaussianBlur(img, (3, 3), 1)
         im_blur_resize = im_blur.copy()
         new_size_ratio = 1
-        if max_size > 1000:
-            new_size_ratio = 1000.0 / max_size
-            im_blur_resize = cv2.resize(
-                im_blur_resize, None, None, new_size_ratio, new_size_ratio)
+        if max_size > self.large_image_threshold:
+            new_size_ratio = self.large_image_threshold / max_size
+            im_blur_resize = cv2.resize(im_blur_resize, None, None, new_size_ratio, new_size_ratio)
 
         # detect quads
         quads = self.apriltag_quad_thresh(im_blur_resize)
@@ -42,13 +42,13 @@ class Detector:
 
         # refine on small image
         if new_size_ratio < 1:
-            quads = [cv2.cornerSubPix(im_blur_resize, quad.astype(
-                np.float32), winSize, zeroZone, criteria) for quad in quads]
-            quads = [quad/new_size_ratio for quad in quads]
+            quads = [
+                cv2.cornerSubPix(im_blur_resize, quad.astype(np.float32), winSize, zeroZone, criteria) for quad in quads
+            ]
+            quads = [quad / new_size_ratio for quad in quads]
 
         # refine on oringinal image
-        quads = [cv2.cornerSubPix(img, quad.astype(
-            np.float32), winSize, zeroZone, criteria) for quad in quads]
+        quads = [cv2.cornerSubPix(img, quad.astype(np.float32), winSize, zeroZone, criteria) for quad in quads]
         detections = self.tag_family.decodeQuad(quads, img)
         return detections
 
@@ -58,8 +58,7 @@ class Detector:
         im_copy = im.copy()
 
         threshim = self.threshold(im_copy)
-        (cnts, _) = cv2.findContours(threshim,
-                                     cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+        (cnts, _) = cv2.findContours(threshim, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
 
         # debug
         if self.debug_level > 0:
@@ -83,10 +82,10 @@ class Detector:
                     cv2.drawContours(output, [c], -1, random_color(), 2)
                     cv2.imshow("debug", output)
                     cv2.waitKey(0)
-                if (area / areahull > 0.8):
+                if area / areahull > 0.8:
                     # maximum_area_inscribed
                     quad = cv2.approxPolyDP(hull, 8, True)
-                    if (len(quad) == 4):
+                    if len(quad) == 4:
                         areaqued = cv2.contourArea(quad)
                         if areaqued / areahull > 0.8 and areahull >= areaqued:
                             # Calculate the refined corner locations
@@ -107,12 +106,15 @@ class Detector:
         im_max = np.repeat(np.repeat(im_max, tilesz, axis=1), tilesz, axis=0)
 
         edge = max(h % tilesz, w % tilesz)
-        im_min = np.pad(im_min, (0, edge), 'edge')[:h, :w]
-        im_max = np.pad(im_max, (0, edge), 'edge')[:h, :w]
+        im_min = np.pad(im_min, (0, edge), "edge")[:h, :w]
+        im_max = np.pad(im_max, (0, edge), "edge")[:h, :w]
 
-        im_diff = im_max-im_min
-        threshim = np.where(im_diff < self.min_white_black_diff, np.uint8(0),
-                            np.where(im > (im_min + im_diff // 2), np.uint8(255), np.uint8(0)))
+        im_diff = im_max - im_min
+        threshim = np.where(
+            im_diff < self.min_white_black_diff,
+            np.uint8(0),
+            np.where(im > (im_min + im_diff // 2), np.uint8(255), np.uint8(0)),
+        )
 
         # hi-res img can try dilate twice
         threshim = cv2.dilate(threshim, kernel0)
