@@ -7,6 +7,18 @@ from .detection import Detection
 from .common import max_pool, random_color
 
 
+def filter_duplicate_detections(detections: List[Detection]) -> List[Detection]:
+    d = {}
+    for detection in detections:
+        area = cv2.contourArea(detection.corners)
+        if detection.tag_id not in d:
+            d[detection.tag_id] = (area, detection)
+        else:
+            if area > d[detection.tag_id][0]:
+                d[detection.tag_id] = (area, detection)
+    return [i[1] for i in d.values()]
+
+
 @dataclass
 class Detector:
     tag_family_name: str
@@ -50,6 +62,7 @@ class Detector:
         # refine on oringinal image
         quads = [cv2.cornerSubPix(img, quad.astype(np.float32), winSize, zeroZone, criteria) for quad in quads]
         detections = self.tag_family.decodeQuad(quads, img)
+        detections = filter_duplicate_detections(detections)
         return detections
 
     def apriltag_quad_thresh(self, im: np.ndarray):
